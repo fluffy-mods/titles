@@ -17,6 +17,7 @@ WORKDIR /app
 
 # set up packages
 # RUN npm install -g yarn
+RUN yarn global add nodemon
 ADD package.json /app
 RUN yarn install
 
@@ -25,4 +26,4 @@ ADD . /app
 
 # run the app
 EXPOSE 3000
-CMD [ "node", "lib/index.js" ]
+CMD [ "nodemon", "lib/index.js" ]
