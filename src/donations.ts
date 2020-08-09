@@ -77,7 +77,7 @@ interface DonationOptions {
 }
 
 const defaultDonationOptions: DonationOptions = {
-    maxAge: ms("2 months"),
+    maxAge: ms("90 days"),
     limit: 100,
 };
 

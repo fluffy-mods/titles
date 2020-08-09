@@ -80,6 +80,7 @@ app.get(
             if (await isCached(filePath, CACHE_DONATIONS_MAXAGE)) {
                 return res.sendFile(filePath);
             }
+
             const supporterOptions = {
                 maxAge: ms("90 days"),
                 limit: 500,
@@ -100,11 +101,11 @@ app.get(
             const minAgeBrightness = 55;
             const cloudSettings: Partial<WordCloudSettings> = {
                 cloudOffset: {
-                    x: 50,
-                    y: 75,
+                    x: 25,
+                    y: 45,
                 },
                 cloudHeight: 215,
-                cloudWidth: 540,
+                cloudWidth: 420,
                 minRotation: 0,
                 maxRotation: 0,
                 rotationSteps: 7,

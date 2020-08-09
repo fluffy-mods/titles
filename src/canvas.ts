@@ -53,7 +53,7 @@ function drawBannerTitle(
             _settings.pointOffset.y +
             _settings.bannerOffset.y +
             _settings.bannerHeight / 2 +
-            2,
+            1,
         _settings.width - (_settings.margin + _settings.bannerSlant) * 2
     );
 }
@@ -248,8 +248,7 @@ export async function createTwitchPreviewImage(
         _settings.margin +
             _settings.pointOffset.y +
             _settings.bannerOffset.y +
-            titleHeight / 2 -
-            4,
+            titleHeight / 2,
         _settings.width - (_settings.margin + _settings.bannerSlant) * 2
     );
 
@@ -295,9 +294,9 @@ export interface BannerSettings {
 }
 
 const defaultBannerSettings: BannerSettings = {
-    width: 630,
-    margin: 5,
-    pointOffset: { x: 120, y: 20 },
+    width: 480,
+    margin: 0,
+    pointOffset: { x: 80, y: 10 },
     bannerOffset: { x: 0, y: 0 },
     colours: {
         bannerBg: "#145398",
@@ -305,8 +304,8 @@ const defaultBannerSettings: BannerSettings = {
         boxBg: "#1a222b",
         text: "#fff",
     },
-    bannerHeight: 48,
-    bannerSlant: 20,
+    bannerHeight: 30,
+    bannerSlant: 10,
 };
 
 interface TwitchPreviewSettings extends BannerSettings {
@@ -320,8 +319,8 @@ const defaultTwitchPreviewSettings: TwitchPreviewSettings = merge(
     {},
     defaultBannerSettings,
     {
-        previewWidth: 520,
-        previewHeight: 300,
+        previewWidth: 400,
+        previewHeight: 230,
         previewOffset: {
             x: 55,
             y: 0,
@@ -418,7 +417,7 @@ interface TwitchScheduleSettings {
 }
 
 const defaultTwitchScheduleSettings: TwitchScheduleSettings = {
-    lineHeight: 28,
+    lineHeight: 20,
 };
 
 export async function createTwitchScheduleImage(
@@ -442,8 +441,7 @@ export async function createTwitchScheduleImage(
         _settings.margin +
         _settings.pointOffset.y +
         _settings.bannerHeight +
-        _settings.lineHeight / 2 +
-        4;
+        _settings.lineHeight / 2;
     const maxWidth =
         _settings.width -
         _settings.contentSlant -
