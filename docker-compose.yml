@@ -2,7 +2,7 @@ networks:
     localhost:
         driver: bridge
     production:
-        name: ${NGINX_NETWORK_NAME}
+        name: srv_personal
         external: true
 
 services:
@@ -10,9 +10,9 @@ services:
         build: .
         restart: on-failure
         networks:
-            - localhost
+            - production
         ports:
-            - 3000:3000 #:3000 # local dev
+            - 3000 #:3000 # local dev
         env_file:
             - .env
         environment:

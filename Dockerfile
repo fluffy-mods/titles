@@ -9,7 +9,8 @@ RUN apk add --no-cache \
     cairo-dev \
     jpeg-dev \
     pango-dev \
-    giflib-dev
+    giflib-dev \
+    librsvg-dev
 
 # set up directory structure
 RUN mkdir /app
@@ -25,6 +26,10 @@ RUN npm install
 # copy over the rest
 COPY . .
 
+# compile src
+RUN npx tsc
+
 # run the app
 EXPOSE 3000
+# CMD sh
 CMD [ "nodemon", "lib/index.js" ]
