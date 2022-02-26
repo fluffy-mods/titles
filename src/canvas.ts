@@ -18,7 +18,7 @@ export async function createBannerImage(
         _settings.bannerHeight +
         (_settings.pointOffset.y + _settings.margin) * 2;
     const canvas = new Canvas(_settings.width, height);
-    drawBanner(title, canvas, _settings);
+    await drawBanner(title, canvas, _settings);
     return canvas.toBuffer("image/png");
 }
 
@@ -27,17 +27,38 @@ async function drawBanner(
     canvas: Canvas,
     _settings: BannerSettings
 ) {
-    drawBannerBackground(canvas, _settings);
-    drawBannerForeground(canvas, _settings);
-    drawBannerTitle(title, canvas, _settings);
+    await drawBannerBackground(canvas, _settings);
+    await drawBannerForeground(canvas, _settings);
+    await drawBannerTitle(title, canvas, _settings);
 }
 
-function drawBannerTitle(
+const FLAG_PROPORTION = 1.618;
+const FLAG = canvas.loadImage(path.join(__dirname, "../images/ua-flag.svg"));
+async function drawBannerTitle(
     title: string,
     canvas: Canvas,
     _settings: BannerSettings
 ) {
     const ctx = canvas.getContext("2d");
+
+    // draw flag
+    const flag = await FLAG;
+    const flag_height = _settings.bannerHeight + 20;
+    const flag_width = flag_height * FLAG_PROPORTION;
+    const flag_x = _settings.bannerSlant + _settings.bannerOffset.x - 5;
+    const flag_y = _settings.pointOffset.y + _settings.bannerOffset.y - 10;
+    console.log({ flag_x, flag_y, flag_width, flag_height });
+    ctx.drawImage(
+        flag,
+        0,
+        0,
+        flag.width,
+        flag.height,
+        flag_x,
+        flag_y,
+        flag_width,
+        flag_height
+    );
 
     // draw title
     ctx.fillStyle = _settings.colours.text;
@@ -46,13 +67,15 @@ function drawBannerTitle(
     ctx.textBaseline = "middle";
     ctx.fillText(
         title,
-        _settings.width / 2 + _settings.bannerOffset.x,
+        _settings.width / 2 + _settings.bannerOffset.x + flag_width / 2,
         _settings.margin +
             _settings.pointOffset.y +
             _settings.bannerOffset.y +
             _settings.bannerHeight / 2 +
             1,
-        _settings.width - (_settings.margin + _settings.bannerSlant) * 2
+        _settings.width -
+            (_settings.margin + _settings.bannerSlant) * 2 -
+            flag_width
     );
 }
 
@@ -179,14 +202,6 @@ function drawBannerBackground(canvas: Canvas, _settings: BannerSettings) {
     ctx.fill();
 }
 
-const preview: {
-    time: number;
-    image: canvas.Image | undefined;
-} = {
-    time: 0,
-    image: undefined,
-};
-
 function createPath(
     context: CanvasRenderingContext2D,
     ...points: { x: number; y: number }[]
@@ -228,27 +243,6 @@ const defaultBannerSettings: BannerSettings = {
     bannerHeight: 30,
     bannerSlant: 10,
 };
-
-interface TwitchPreviewSettings extends BannerSettings {
-    previewWidth: number;
-    previewHeight: number;
-    previewOffset: point;
-    previewFontSize: number;
-}
-
-const defaultTwitchPreviewSettings: TwitchPreviewSettings = merge(
-    {},
-    defaultBannerSettings,
-    {
-        previewWidth: 400,
-        previewHeight: 230,
-        previewOffset: {
-            x: 55,
-            y: 0,
-        },
-        previewFontSize: 24,
-    }
-);
 
 export interface BannerWithBackgroundSettings extends BannerSettings {
     contentHeight: number;
@@ -315,63 +309,22 @@ export async function createBannerWithBackground(
         },
     };
 
-    drawBannerBackground(canvas, _settings);
+    await drawBannerBackground(canvas, _settings);
 
     // info box background
     // draw background
     ctx.fillStyle = _settings.colours.boxBg;
-    ctx.beginPath();
-    ctx.moveTo(POINTS.bgTopLeft.x, POINTS.bgTopLeft.y);
-    ctx.lineTo(POINTS.bgBottomLeft.x, POINTS.bgBottomLeft.y);
-    ctx.lineTo(POINTS.bgBottomRight.x, POINTS.bgBottomRight.y);
-    ctx.lineTo(POINTS.bgTopRight.x, POINTS.bgTopRight.y);
+    createPath(
+        ctx,
+        POINTS.bgTopLeft,
+        POINTS.bgBottomLeft,
+        POINTS.bgBottomRight,
+        POINTS.bgTopRight
+    );
     ctx.fill();
 
-    drawBannerForeground(canvas, _settings);
-    drawBannerTitle(title, canvas, _settings);
+    await drawBannerForeground(canvas, _settings);
+    await drawBannerTitle(title, canvas, _settings);
 
     return canvas;
-}
-
-interface TwitchScheduleSettings {
-    lineHeight: number;
-}
-
-const defaultTwitchScheduleSettings: TwitchScheduleSettings = {
-    lineHeight: 20,
-};
-
-export async function createTwitchScheduleImage(
-    text: string[],
-    settings?: Partial<BannerWithBackgroundSettings & TwitchScheduleSettings>
-) {
-    const _settings = merge(
-        {},
-        defaultBannerWithBackgroundSettings,
-        defaultTwitchScheduleSettings,
-        settings
-    );
-    _settings.contentHeight = text.length * _settings.lineHeight;
-    const Canvas = await createBannerWithBackground(
-        "Twitch Streams",
-        _settings
-    );
-    const ctx = Canvas.getContext("2d");
-
-    let yPosition =
-        _settings.margin +
-        _settings.pointOffset.y +
-        _settings.bannerHeight +
-        _settings.lineHeight / 2;
-    const maxWidth =
-        _settings.width -
-        _settings.contentSlant -
-        (_settings.margin + _settings.contentInset + _settings.bannerSlant) * 2;
-    ctx.font = `${_settings.lineHeight}px Staatliches`;
-
-    for (let line of text) {
-        ctx.fillText(line, _settings.width / 2, yPosition, maxWidth);
-        yPosition += _settings.lineHeight;
-    }
-    return Canvas.toBuffer("image/png");
 }
