@@ -1,3 +1,5 @@
+import "./environment";
+
 import cors from "cors";
 import express from "express";
 import ms from "ms";
@@ -18,10 +20,8 @@ import {
     isCached,
 } from "./filesystem";
 import { localeMiddleware, timezoneMiddleware } from "./locales";
+import { loggerMiddleware } from "./logger";
 import { createWordCloud, renderWordCloud, WordCloudSettings } from "./wordcloud";
-
-require("dotenv").config({});
-const STREAM_TIMES = ["tuesday 20:00", "thursday 20:00"];
 
 const app = express();
 const port = 3000;
@@ -44,10 +44,11 @@ app.post("/donation", async (req, res) => {
 });
 
 /**
- * get top donators word cloud
+ * get top donators word cloud.
  */
 app.get(
     "/donations.png",
+    loggerMiddleware(),
     express.urlencoded({ extended: true }),
     cacheControl(CACHE_DONATIONS_MAXAGE),
     async (req, res) => {

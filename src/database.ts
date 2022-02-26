@@ -1,6 +1,6 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
-const dbUri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@donations-vsh2n.azure.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
-export const client = new MongoClient(dbUri, {
-    useUnifiedTopology: true,
+const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
+export const client = new MongoClient(uri, {
+    serverApi: ServerApiVersion.v1,
 }).connect();

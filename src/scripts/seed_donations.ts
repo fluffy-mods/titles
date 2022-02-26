@@ -1,31 +1,40 @@
-require("dotenv").config();
+import "../environment";
 
-import path from "path";
-import { fs } from "mz";
+import { parse } from "csv-parse/sync";
 import moment from "moment";
+import fs from "mz/fs";
+import { join } from "path";
+
+import { client } from "../database";
 import { storeDonation } from "../donations";
 
-async function seed() {
-    const rawDonations = await fs.readFile(
-        path.join(__dirname, "../../data/donations.json"),
-        "utf8"
-    );
-    const donations = JSON.parse(rawDonations);
-    let lastTimestamp = moment("2021-01-01", "yyyy-MM-DD");
-    let year = 2020;
-    for (const donation of donations) {
-        let curTimestamp = moment(`${donation.date} ${year}`, "D MMM yyyy");
-        if (curTimestamp.isAfter(lastTimestamp)) {
-            curTimestamp = moment(`${donation.date} ${--year}`, "D MMM yyyy");
-        }
-        lastTimestamp = curTimestamp;
+const BASE_PATH = "data/transactions";
+const ANONYMOUS = ["Ko-fi Supporter"];
 
-        const amountRegex = donation.amount.match(/You received (?:\$|€)(\d+)/);
-        const amount = amountRegex ? parseInt(amountRegex[1]) : 0;
-        const timestamp = curTimestamp.toDate();
-        const from = donation.from == "Anon" ? "Anonymous" : donation.from;
-        storeDonation({ amount, timestamp, from });
+async function seed() {
+    for (const file of await fs.readdir(BASE_PATH)) {
+        console.log({ file });
+
+        const donations = parse(await fs.readFile(join(BASE_PATH, file)), {
+            columns: true,
+        });
+
+        for (const donation of donations) {
+            const from = ANONYMOUS.includes(donation.From)
+                ? "Anonymous"
+                : donation.From;
+
+            const amount = parseFloat(donation.Received);
+            const timestamp = moment(
+                Object.values(donation)[0] as string,
+                "MM/DD/YYYY"
+            ).toDate();
+            console.log({ amount, timestamp, from });
+            await storeDonation({ amount, timestamp, from });
+        }
     }
+
+    (await client).close();
 }
 
 seed();

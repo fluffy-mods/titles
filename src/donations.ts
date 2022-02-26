@@ -62,7 +62,7 @@ export async function storeDonation(
         const result = await donationCollection.insertOne(donation);
         console.log({ donation, result });
 
-        if (result.result.ok == 1) {
+        if (result.acknowledged) {
             return { status: 200, message: "ok" };
         } else {
             return { status: 400, message: "failed" };
