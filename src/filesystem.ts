@@ -1,14 +1,14 @@
-import { fs } from "mz";
 import express, { NextFunction, Request, Response } from "express";
-import path from "path";
 import ms from "ms";
+import { fs } from "mz";
+import path from "path";
 
-// export const CACHE_DONATIONS = "/tmp/cache/donations.png";
-// export const CACHE_PREVIEWS = "/tmp/cache/previews/";
-// export const CACHE_TITLES = "/tmp/cache/titles/";
-export const CACHE_DONATIONS = path.join(__dirname, "../cache/donations.png");
-export const CACHE_PREVIEWS = path.join(__dirname, "../cache/previews/");
-export const CACHE_TITLES = path.join(__dirname, "../cache/titles/");
+export const CACHE_DONATIONS = "/tmp/cache/donations.png";
+export const CACHE_PREVIEWS = "/tmp/cache/previews/";
+export const CACHE_TITLES = "/tmp/cache/titles/";
+// export const CACHE_DONATIONS = path.join(__dirname, "../cache/donations.png");
+// export const CACHE_PREVIEWS = path.join(__dirname, "../cache/previews/");
+// export const CACHE_TITLES = path.join(__dirname, "../cache/titles/");
 export const CACHE_DONATIONS_MAXAGE = ms("1 day");
 export const CACHE_PREVIEWS_MAXAGE = ms("5 minutes");
 export const CACHE_TITLES_MAXAGE = ms("1 year");
@@ -60,9 +60,7 @@ export async function isCached(
         if (Date.now() - file.mtimeMs < maxAge) {
             return true;
         }
-    } catch (err) {
-        console.error({ err });
-    }
+    } catch (err) {}
     return false;
 }
 

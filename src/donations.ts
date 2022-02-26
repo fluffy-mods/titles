@@ -1,6 +1,7 @@
-import { client } from "./database";
-import ms from "ms";
 import merge from "lodash/merge";
+import ms from "ms";
+
+import { client } from "./database";
 
 export interface IDonationData {
     message_id: string;
@@ -66,8 +67,13 @@ export async function storeDonation(
         } else {
             return { status: 400, message: "failed" };
         }
-    } catch (err) {
-        return { status: 500, message: err.toString() };
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            return { status: 500, message: err.toString() };
+        } else {
+            console.log({ err });
+            return { status: 500, message: "unknown error" };
+        }
     }
 }
 

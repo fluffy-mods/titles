@@ -2,7 +2,8 @@ node_modules
 lib
 .env
 cache
-data/*.*
-fonts/*.*
-cache/**/*.*
+data/*
+fonts/*
+cache/
 *.log
+.vscode

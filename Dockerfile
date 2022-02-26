@@ -12,14 +12,13 @@ RUN apk add --no-cache \
     giflib-dev
 
 # set up directory structure
-RUN mkdir /app
 WORKDIR /app
 
 # set up packages
 # RUN npm install -g yarn
-RUN yarn global add nodemon
-ADD package.json /app
-RUN yarn install
+RUN npm install -g nodemon
+ADD package*.json /app
+RUN npm install
 
 # copy over the rest
 ADD . /app

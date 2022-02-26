@@ -1,8 +1,6 @@
-import canvas, { loadImage, Canvas } from "canvas";
-import path from "path";
-import { HelixStream } from "twitch";
-import { CACHE_PREVIEWS_MAXAGE } from "./filesystem";
+import canvas, { Canvas } from "canvas";
 import merge from "lodash/merge";
+import path from "path";
 
 const FONT_STAATLICHES = path.join(
     __dirname,
@@ -188,83 +186,6 @@ const preview: {
     time: 0,
     image: undefined,
 };
-
-export async function getTwitchPreview(
-    stream: HelixStream,
-    width: number,
-    height: number,
-    maxAge: number = CACHE_PREVIEWS_MAXAGE
-) {
-    if (preview.time + maxAge < Date.now() || !preview.image) {
-        const previewUrl = stream.thumbnailUrl
-            .replace("{width}", width.toString())
-            .replace("{height}", height.toString())
-            .replace(".jpg", ".png");
-        preview.image = await loadImage(previewUrl);
-    }
-    return preview.image;
-}
-
-export async function createTwitchPreviewImage(
-    stream: HelixStream,
-    settings?: Partial<TwitchPreviewSettings>
-) {
-    const _settings = merge({}, defaultTwitchPreviewSettings, settings);
-    const height = _settings.margin * 2 + _settings.previewHeight;
-    _settings.bannerHeight += _settings.previewFontSize / 1.2;
-    _settings.pointOffset.y *= 1.2;
-    _settings.bannerOffset.y =
-        height -
-        _settings.margin * 2 -
-        _settings.bannerHeight -
-        _settings.pointOffset.y * 2;
-    const canvas = new Canvas(_settings.width, height);
-    const ctx = canvas.getContext("2d");
-
-    const previewImage = await getTwitchPreview(
-        stream,
-        _settings.previewWidth,
-        _settings.previewHeight
-    );
-
-    drawBannerBackground(canvas, _settings);
-    ctx.drawImage(
-        previewImage,
-        _settings.previewOffset.x,
-        _settings.previewOffset.y
-    );
-    drawBannerForeground(canvas, _settings);
-
-    // draw title
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = _settings.colours.text;
-    const titleHeight =
-        (_settings.bannerHeight - _settings.previewFontSize) * 1.2;
-    ctx.font = `${titleHeight}px Staatliches`;
-    ctx.fillText(
-        "Streaming Now!",
-        _settings.width / 2 + _settings.bannerOffset.x,
-        _settings.margin +
-            _settings.pointOffset.y +
-            _settings.bannerOffset.y +
-            titleHeight / 2,
-        _settings.width - (_settings.margin + _settings.bannerSlant) * 2
-    );
-
-    // draw subtitle
-    ctx.font = `${_settings.previewFontSize}px Staatliches`;
-    ctx.fillText(
-        stream.title.split("-")[0],
-        _settings.width / 2 + _settings.bannerSlant / 3,
-        _settings.bannerOffset.y +
-            _settings.pointOffset.y +
-            _settings.bannerHeight -
-            _settings.previewFontSize / 1.2 / 2,
-        _settings.width - (_settings.margin + _settings.bannerSlant) * 2
-    );
-    return canvas.toBuffer("image/png");
-}
 
 function createPath(
     context: CanvasRenderingContext2D,

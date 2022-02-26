@@ -1,49 +1,30 @@
-require("dotenv").config({});
+import cors from "cors";
 import express from "express";
+import ms from "ms";
+import { unlink } from "mz/fs";
 import { mw as ipMiddleware } from "request-ip";
+
+import { createBannerImage, createBannerWithBackground } from "./canvas";
+import { client } from "./database";
+import { getDonations, storeDonation } from "./donations";
 import {
-    localeMiddleware,
-    timezoneMiddleware,
-    getLocalTime,
-    getTimezoneAbbreviation,
-} from "./locales";
-import { loggerMiddleware } from "./logger";
-import {
-    isCached,
-    previewPath,
-    cacheFile,
     bannerPath,
-    createCache,
+    cache as cacheControl,
     CACHE_DONATIONS,
     CACHE_DONATIONS_MAXAGE,
     CACHE_TITLES_MAXAGE,
-    cache as cacheControl,
-    CACHE_PREVIEWS_MAXAGE,
+    cacheFile,
+    createCache,
+    isCached,
 } from "./filesystem";
-import {
-    createTwitchPreviewImage,
-    createTwitchScheduleImage,
-    createBannerImage,
-    createBannerWithBackground,
-} from "./canvas";
-import { getStreamDetails } from "./twitch";
-import cors from "cors";
-import { storeDonation, getDonations } from "./donations";
-import bodyParser from "body-parser";
-import { client } from "./database";
-import {
-    createWordCloud,
-    renderWordCloud,
-    WordCloudSettings,
-} from "./wordcloud";
-import ms from "ms";
-import { unlink } from "mz/fs";
+import { localeMiddleware, timezoneMiddleware } from "./locales";
+import { createWordCloud, renderWordCloud, WordCloudSettings } from "./wordcloud";
 
+require("dotenv").config({});
 const STREAM_TIMES = ["tuesday 20:00", "thursday 20:00"];
 
 const app = express();
 const port = 3000;
-const logger = loggerMiddleware();
 
 app.use(cors({ origin: ["https://steamcommunity.com", "https://ludeon.com"] }));
 app.use(ipMiddleware());
@@ -53,26 +34,21 @@ app.use(timezoneMiddleware());
 /**
  * handle donation webhook
  */
-app.post(
-    "/donation",
-    logger,
-    bodyParser.urlencoded({ extended: true }),
-    async (req, res) => {
-        const donation = JSON.parse(req.body.data);
-        const result = await storeDonation(donation);
-        res.status(result.status).send(result.message);
+app.post("/donation", async (req, res) => {
+    const donation = JSON.parse(req.body.data);
+    const result = await storeDonation(donation);
+    res.status(result.status).send(result.message);
 
-        // remove cached donations png to have it re-generated
-        unlink(CACHE_DONATIONS);
-    }
-);
+    // remove cached donations png to have it re-generated
+    unlink(CACHE_DONATIONS);
+});
 
 /**
  * get top donators word cloud
  */
 app.get(
     "/donations.png",
-    // logger,
+    express.urlencoded({ extended: true }),
     cacheControl(CACHE_DONATIONS_MAXAGE),
     async (req, res) => {
         try {
@@ -168,56 +144,8 @@ function lerp(
     let val = (source - sourceMin) / (sourceMax - sourceMin);
     return targetMin + val * (targetMax - targetMin);
 }
-
-app.get(
-    "/preview.png",
-    logger,
-    cacheControl(CACHE_PREVIEWS_MAXAGE),
-    async (req, res) => {
-        try {
-            const streamer = (req.query.stream as string) ?? "fluffierthanthou";
-            const filePath = previewPath(req);
-            if (await isCached(filePath)) {
-                return res.sendFile(filePath);
-            }
-
-            const streamDetails = await getStreamDetails(streamer);
-            let imageBuffer: Buffer;
-            if (streamDetails) {
-                imageBuffer = await createTwitchPreviewImage(streamDetails);
-            } else {
-                let localizedTimes = STREAM_TIMES.map((time) =>
-                    getLocalTime(time, req.timezone, req.locale)
-                );
-                let localizedTimezone = getTimezoneAbbreviation(
-                    req.timezone,
-                    req.locale
-                );
-                let text = [
-                    "I live stream modding on twitch" +
-                        (req.locale.startsWith("en")
-                            ? ", come and hang out!"
-                            : " (in English)"),
-                    "twitch.tv/FluffierThanThou",
-                    localizedTimes.join(" & ") + " " + localizedTimezone,
-                ];
-                imageBuffer = await createTwitchScheduleImage(text);
-            }
-
-            cacheFile(filePath, imageBuffer);
-            return res.type("png").send(imageBuffer);
-        } catch (err) {
-            console.log(err);
-            res.status(500).send(
-                "something went wrong. Please try again later, and contact karel.kroeze@gmail.com if the issue persists."
-            );
-        }
-    }
-);
-
 app.get(
     /\/title\/(.*)\.png$/,
-    // logger,
     cacheControl(CACHE_TITLES_MAXAGE),
     async (req, res) => {
         try {

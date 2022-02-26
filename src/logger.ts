@@ -1,12 +1,12 @@
+import { Request } from "express";
 import morgan from "morgan";
-import chalk from "chalk";
 
 // create tokens
-morgan.token("locale", (req) => req.locale);
-morgan.token("timezone", (req) => req.timezone);
+morgan.token<Request, any>("locale", (req) => req.locale);
+morgan.token<Request, any>("timezone", (req) => req.timezone);
 
 export function loggerMiddleware() {
-  return morgan(
-    ":response-time ms :timezone :locale :url :status :res[content-length] :referrer"
-  );
+    return morgan(
+        ":response-time ms :timezone :locale :url :status :res[content-length] :referrer"
+    );
 }
