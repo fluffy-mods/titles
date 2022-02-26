@@ -3,7 +3,7 @@ lib
 .env
 cache
 data/*
-fonts/*
+!data/supportedLocales.json
 cache/
 *.log
 .vscode
