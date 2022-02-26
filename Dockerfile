@@ -12,16 +12,18 @@ RUN apk add --no-cache \
     giflib-dev
 
 # set up directory structure
+RUN mkdir /app
 WORKDIR /app
 
 # set up packages
 # RUN npm install -g yarn
 RUN npm install -g nodemon
-ADD package*.json /app
+COPY package.json .
+COPY package-lock.json .
 RUN npm install
 
 # copy over the rest
-ADD . /app
+COPY . .
 
 # run the app
 EXPOSE 3000

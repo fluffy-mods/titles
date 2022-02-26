@@ -6,7 +6,7 @@ networks:
         external: true
 
 services:
-    banners:
+    titles:
         build: .
         restart: on-failure
         networks:
